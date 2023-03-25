@@ -1,0 +1,43 @@
+
+= GreetingPlus
+
+== Build
+
+  mvn clean install
+
+== Start Umgebung
+
+  docker-compose -f docker/docker-compose.yml up
+
+== Deploy WebApplication
+
+...
+
+== Call RestResources from CLI
+
+  curl -v -X GET http://localhost:5080/greeting-web/hello
+
+Aufruf mit HTTP
+
+  curl -k -v -X GET https://localhost:5081/greeting-web/hello
+
+Aufruf mit HTTPS ohne Server-Authentifizierung
+
+
+== Vorbereitung für Rest-Client mit HTTPS und Java-Truststore
+
+Server-Zertifikat vom Payara-Server holen
+
+  openssl s_client -connect localhost:5081 2>/dev/null </dev/null | openssl x509 -outform der > payara.cer
+
+Server-Zertifikat anzeigen
+
+  openssl x509 -noout -text -in payara.cer
+
+Server-Zertifikat in PEM umwandeln
+
+  openssl x509 -inform der -in payara.cer -out payara.pem
+
+Server-Zertifikat in ein Java-Truststore importieren
+
+  keytool -import -alias payara -file payara.pem -storetype JKS -keystore truststore.jks
