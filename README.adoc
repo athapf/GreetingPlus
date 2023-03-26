@@ -41,3 +41,41 @@ Server-Zertifikat in PEM umwandeln
 Server-Zertifikat in ein Java-Truststore importieren
 
   keytool -import -alias payara -file payara.pem -storetype JKS -keystore truststore.jks
+
+== Client-Authentifizierung mit mTLS
+
+Client-Key und Zertifikat mit Keytool erstellen
+
+  keytool -genkey -alias client -storetype jks -keyalg RSA -keystore mTLS/keystore.jks -keysize 2048
+
+Client-Zertifikat exportieren
+
+  keytool -v -export -file mTLS/client.cer -keystore mTLS/keystore.jks -alias client
+
+Client-Zertifikat in PEM umwandeln
+
+  openssl x509 -inform der -in mTLS/client.cer -out mTLS/client.pem
+
+Truststore vom Payara-Server holen
+
+  docker cp docker_payara_1:/opt/payara/appserver/glassfish/domains/domain1/config/cacerts.jks mTLS/cacerts.jks
+
+in Truststore vom Server importieren
+
+  keytool -import -trustcacerts -keystore mTLS/cacerts.jks -alias client -file mTLS/client.pem 
+
+Truststore zum Payara-Server hoch laden
+
+  docker cp mTLS/cacerts.jks docker_payara_1:/opt/payara/appserver/glassfish/domains/domain1/config/cacerts.jks
+
+*Achtung:* Signierte ZErtifikate gehen im Keystore mit Java *nicht*.
+Ab Java 8 nur mit dem Attribut: OID 2.16.840.1.113894.746875.1.1
+(java_trusted_ca)
+(StackOverflow "Creating .p12 truststore with openssl")
+
+Konvertiere Keystore von JKS nach PKCS12
+
+  keytool -importkeystore -srckeystore <keystore.jks> -srcstoretype JKS -srcstorepass <passwd> -destkeystore <keystore.p12> -deststoretype PKCS12 -deststorepass <passwd>
+  openssl pkcs12 -info -in <keystore.p12>
+
+Unter "Key Attributes" sollte dann das Attribute aufgelistet sein
