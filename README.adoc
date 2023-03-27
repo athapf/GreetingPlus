@@ -79,3 +79,45 @@ Konvertiere Keystore von JKS nach PKCS12
   openssl pkcs12 -info -in <keystore.p12>
 
 Unter "Key Attributes" sollte dann das Attribute aufgelistet sein
+
+
+== mTLS: Keys, Certificates und Stores mit easy-rsa und openssl
+
+Verzeichnis-Struktur mit easy-rsa erstellen
+
+  easyrsa init-pki
+
+Im Verzeichnis pki die Datei ver editieren
+
+Dann CA einrichten
+
+  easyrsa build-ca
+
+Diffy-Helman erstellen
+
+  easyrsa gen-dh
+
+Java-Truststore mit Root-CA-Zertifikat erstellen
+
+  keytool -import -alias server -file pki/ca.crt -keystore mTLS/truststore.jks -storetype jks
+
+signiertes Server-Zertifikat erstellen
+
+  easyrsa build-server-full server nopass
+
+
+signiertes Client-Zertifikat erstellen
+
+  easyrsa build-client-full client
+
+PKCS12 KeyStore erstellen
+
+  openssl pkcs12 -export -out mTLS/client.p12 -inkey pki/private/client.key -in pki/issued/client.crt
+
+Mit Keytool pkcs12-Datei anschauen
+
+  keytool -list -rfc -keystore mTLS/client.p12 -storetype pkcs12
+
+PKCS12 KeyStore in JKS umwandeln
+
+  
